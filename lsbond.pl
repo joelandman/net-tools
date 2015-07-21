@@ -13,7 +13,7 @@ chomp(@devices    = `ls /sys/class/net/ `);
 foreach $dev (@devices)
   {
    next if ($dev !~ /bonding_masters/i);
-   printf "dev: %s\n",$dev;
+   #printf "dev: %s\n",$dev;
    chomp( @bonds = split(/\n/,`cat /sys/class/net/bonding_masters `) );
 
    foreach $bond (@bonds) {
@@ -44,14 +44,14 @@ foreach $dev (@devices)
        }
      }
      chomp(@slaves    = `ls /sys/class/net/$bond`);
-     printf "+bond: %s\n",$bond;
+     #printf "+bond: %s\n",$bond;
      foreach $slave_net (@slaves) {
-       printf "++slave: %s\n",$slave_net;
+       #printf "++slave: %s\n",$slave_net;
        next if ($slave_net !~ /slave_(.*?)/) ;
        $bond_nic = $slave_net;
        $bond_nic =~ s/slave_//;
 
-       printf "++bond nic: %s\n",$bond_nic;
+       #printf "++bond nic: %s\n",$bond_nic;
        $net->{$bond}->{nics}->{$bond_nic}->{carrier} =
         &get_sys_nic_data($bond_nic,'carrier');
        $net->{$bond}->{nics}->{$bond_nic}->{speed} =
@@ -73,7 +73,7 @@ foreach $dev (@devices)
      }
    }
   }
-printf "Dump: %s\n",Dumper($net);
+#printf "Dump: %s\n",Dumper($net);
 foreach $bond (sort keys %{$net}) {
   printf "%s:\tmac %s\n\tstate %4s\n\tmode %s\n\txmit_hash %s\n\tpolling %s ms\n\tup_delay %s ms\n\tdown_delay %s ms\n",
     $bond,
