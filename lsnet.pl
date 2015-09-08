@@ -70,7 +70,8 @@ foreach $dev (sort @devices) {
     }
 }
      
-my @_k = sort keys %{$net};
+printf "%8s [%8s] %4s: %-28s %5s %-9s %-9s\n",
+	"DEVICE","MASTER","LINK","IP Address","MTU","RX (bytes)","TX (bytes)";
 foreach $dev (sort keys %{$net}) {
   my $_s = ($net->{$dev}->{carrier} ? "up" : "down" );
   if (defined($net->{$dev}->{ipv4})) {
