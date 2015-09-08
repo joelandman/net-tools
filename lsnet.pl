@@ -17,6 +17,7 @@ $kver=$kmajor+$kminor/100;
 
 chomp(@devices    = `ls /sys/class/net/ `);
 foreach $dev (sort @devices) {
+   next if ($dev =~ /bonding_masters/);
    $net->{$dev}->{state} =
           &get_sys_nic_data($dev,'operstate');
    $net->{$dev}->{carrier} =
