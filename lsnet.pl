@@ -1,8 +1,8 @@
-#!/opt/scalable/bin/perl
+#!/usr/bin/perl
 
 use strict;
 use Data::Dumper;
-use SI::Utils;
+use Data::Utils;
 use JSON::PP;
 
 my ($f,$dev,@devices,$cmd,$rc,@bonds,$bond,$slave_net,@slaves,$bond_nic);
@@ -71,7 +71,7 @@ foreach $dev (sort @devices) {
 }
      
 printf "%8s [%8s] %4s: %-28s %5s %-9s %-9s\n",
-	"DEVICE","MASTER","LINK","IP Address","MTU","RX (bytes)","TX (bytes)";
+	"DEVICE","MASTER","LINK","IP Address","MTU","TX (bytes)","RX (bytes)";
 foreach $dev (sort keys %{$net}) {
   my $_s = ($net->{$dev}->{carrier} ? "up" : "down" );
   if (defined($net->{$dev}->{ipv4})) {
@@ -83,8 +83,8 @@ foreach $dev (sort keys %{$net}) {
 	$_s,
 	$_ip->{addr},
 	(defined($net->{$dev}->{flags}->{mtu}) ? $net->{$dev}->{flags}->{mtu} : "0"),
-	SI::Utils->bytes_to_size($net->{$dev}->{tx},{ digits => 3}),
-	SI::Utils->bytes_to_size($net->{$dev}->{rx},{ digits => 3});
+	Data::Utils->bytes_to_size($net->{$dev}->{tx},{ digits => 3}),
+	Data::Utils->bytes_to_size($net->{$dev}->{rx},{ digits => 3});
       }
   }
   else
@@ -95,8 +95,8 @@ foreach $dev (sort keys %{$net}) {
 	$_s,
 	"",
 	(defined($net->{$dev}->{flags}->{mtu}) ? $net->{$dev}->{flags}->{mtu} : "0"),
-	SI::Utils->bytes_to_size($net->{$dev}->{tx},{ digits => 3}),
-	SI::Utils->bytes_to_size($net->{$dev}->{rx},{ digits => 3});
+	Data::Utils->bytes_to_size($net->{$dev}->{tx},{ digits => 3}),
+	Data::Utils->bytes_to_size($net->{$dev}->{rx},{ digits => 3});
   }
   
   
@@ -110,8 +110,8 @@ foreach my $_ip (@{$net->{$dev}->{ipv6}}) {
     $_s,
     $_ip->{addr},
     (defined($net->{$dev}->{flags}->{mtu}) ? $net->{$dev}->{flags}->{mtu} : "0"),
-    SI::Utils->bytes_to_size($net->{$dev}->{tx},{ digits => 3}),
-    SI::Utils->bytes_to_size($net->{$dev}->{rx},{ digits => 3});
+    Data::Utils->bytes_to_size($net->{$dev}->{tx},{ digits => 3}),
+    Data::Utils->bytes_to_size($net->{$dev}->{rx},{ digits => 3});
   }
 }
 
