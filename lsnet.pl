@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 
 use strict;
 use Data::Dumper;
@@ -47,10 +47,10 @@ foreach $dev (sort @devices) {
 	      $net->{$dev}->{flags}->{$_y}=$_x;
 	  } 
 	}       
-      if ($line =~ /inet\s+(.*?)\s+brd\s+(.*?)\s+/) {
-	push @{$net->{$dev}->{ipv4}},{addr => $1, mask => $2};
+      if ($line =~ /inet\s+(.*?)\s+(.*?)\s+(.*?)\s+/) {
+	push @{$net->{$dev}->{ipv4}},{addr => $1, mask => $3};
       }
-      if ($line =~ /inet6\s+(.*?)\s+scope/) {
+      if ($line =~ /inet6\s+(.*?)\s+.*/) {
 	push @{$net->{$dev}->{ipv6}},{addr => $1};
       }
     }
