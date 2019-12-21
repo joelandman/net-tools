@@ -36,20 +36,20 @@ GetOptions ("csv|c" => \$csv, "iface|i=s"  => \@ifs);
 ($kmajor,$kminor,$krel,@kv) = split(/\./,`uname -r`);
 $kver=$kmajor+$kminor/100;
 # grab kernel revision, because things change between releases ...
-$width_state =
+
+	$width_state=
 	$width_ipaddr 	=
-	$width_dev 			=
-	$width_master	 	=
-	$width_mtu 			=
-	$width_RX 			=
-	$width_TX 			= -1;
-$width_speed		  =
-  $width_state    =  4;
+	$width_dev 	=
+	$width_master	=
+	$width_mtu 	=
+	$width_RX 	=
+	$width_TX 	= -1;
+$width_speed	= 4;
 
 chomp(@devices    = `ls /sys/class/net/ `);
 foreach $dev (sort @devices) {
 	 next if ((@ifs) && (grep {!/$dev/} @ifs ));
-   my $_s = ($net->{$dev}->{carrier} ? "up" : "down" );
+   my $_s = ($net->{$dev}->{carrier} ? "up" : "dn" );
    #$_s .= sprintf "@%iG",$net->{$dev}->{speed}/1000 if ($net->{$dev}->{speed} > 0);
    $net->{$dev}->{'state'} = $_s;
    $width_state = ( length($_s) > $width_state ? length($_s) : $width_state );
@@ -113,7 +113,7 @@ foreach $dev (sort @devices) {
 }
 
 foreach $dev (sort keys %{$net}) {
-        $net->{$dev}->{flags}->{master}	= (defined($net->{$dev}->{flags}->{master}) ? $net->{$dev}->{flags}->{master} : "");
+ $net->{$dev}->{flags}->{master}	= (defined($net->{$dev}->{flags}->{master}) ? $net->{$dev}->{flags}->{master} : "");
 	$width_master = (length($net->{$dev}->{flags}->{master}) > $width_master ? length($net->{$dev}->{flags}->{master}) : $width_master );
 	$width_mtu = (length($net->{$dev}->{flags}->{mtu}) > $width_mtu ? length($net->{$dev}->{flags}->{mtu}) :  $width_mtu );
 }
@@ -123,20 +123,19 @@ $width_TX = $width_RX = 10;
 my $p = "%";
 my $pl = "";
 if (!$csv) {
-	$format = sprintf "%s%is \[%s%is\] %s%is %s%is %s-%is %s%is  %s%s%is  %s%s%is\n",
-		$p,$width_dev,
-		$p,$width_master,
-		$p,$width_state,
-		$p,$width_speed,
-		$p,$width_ipaddr,
-		$p,$width_mtu,
-		$p,$pl,$width_TX,
-		$p,$pl,$width_RX;
+	   $format = sprintf "%s%is \[%s%is\] %s%is %s%is %s%is %s%is  %s%s%is  %s%s%is\n",
+				$p,$width_dev,
+				$p,$width_master,
+				$p,$width_state,
+				$p,$width_speed,
+				$p,$width_ipaddr,
+				$p,$width_mtu,
+				$p,$pl,$width_TX,
+				$p,$pl,$width_RX;
+   }
+ else {
+    $format = "%s,%s,%s,%s,%s,%s,%s,%s\n";
 }
- else
-   {
-     $format = "%s,%s,%s,%s,%s,%s,%s,%s\n";
-	 }
 
 if ($csv) {
 	printf "#Device,Master,State,Speed,IP,MTU,TX,RX\n";	
@@ -146,14 +145,14 @@ else {
 }
 
 foreach $dev (sort keys %{$net}) {
-  my $_st = ($net->{$dev}->{carrier} ? "up" : "down" );
-  my $_sp = ($net->{$dev}->{speed} > 0 ? sprintf "%iGb",$net->{$dev}->{speed}/1000 : "");
-	my $_ms = (defined($net->{$dev}->{flags}->{master}) ? $net->{$dev}->{flags}->{master} : "");
-	my $_mt = (defined($net->{$dev}->{flags}->{mtu}) ? $net->{$dev}->{flags}->{mtu} : "" );
-	my $_tx = $net->{$dev}->{tx};
-	my $_rx = $net->{$dev}->{rx};
-	my $_txs = Data::Utils->autoscale(Data::Utils->size_to_bytes($_tx),{debug => false});
-	my $_rxs = Data::Utils->autoscale(Data::Utils->size_to_bytes($_rx),{debug => false});
+  my $_st = ($net->{$dev}->{carrier} ? "up" : "dn" );
+  my $_sp = ($net->{$dev}->{speed} > 0 ? sprintf "%iG",$net->{$dev}->{speed}/1000 : "");
+  my $_ms = (defined($net->{$dev}->{flags}->{master}) ? $net->{$dev}->{flags}->{master} : "");
+  my $_mt = (defined($net->{$dev}->{flags}->{mtu}) ? $net->{$dev}->{flags}->{mtu} : "" );
+  my $_tx = $net->{$dev}->{tx};
+  my $_rx = $net->{$dev}->{rx};
+  my $_txs = Data::Utils->autoscale(Data::Utils->size_to_bytes($_tx),{debug => false});
+	 my $_rxs = Data::Utils->autoscale(Data::Utils->size_to_bytes($_rx),{debug => false});
 																		
 	
   if (defined($net->{$dev}->{ipv4})) {
@@ -188,10 +187,6 @@ foreach $dev (sort keys %{$net}) {
 								$_txs,
 								$_rxs;
 	}
-  
-
-
-
 }
 
 sub get_sys_nic_data {
