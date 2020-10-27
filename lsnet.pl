@@ -1,6 +1,5 @@
 #!/usr/bin/env perl
-# copyright 2012-2016 Scalable Informatics Inc
-# copyright 2017-2019 Joe Landman
+# copyright 2012-2019 Joe Landman
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.

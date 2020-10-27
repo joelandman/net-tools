@@ -1,7 +1,6 @@
 #!/usr/bin/perl
 
-# copyright 2012-2016 Scalable Informatics Inc
-# copyright 2017-2019 Joe Landman
+# copyright 2012-2019 Joe Landman
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -51,7 +50,7 @@ close($bm);
        if ($line =~ /Up Delay(.*?):\s+(.*)/) { $net->{$bond}->{up_delay} = $2;}
        if ($line =~ /Down Delay(.*?):\s+(.*)/) { $net->{$bond}->{down_delay} = $2;}
      }
-     if (($kver >= 3.15) && ($kver < 5.0)) {
+     if (($kver >= 3.15) ) {
            $net->{$bond}->{xmit_hash_policy} = &get_sys_nic_data($bond,'bonding/xmit_hash_policy');
 	   $net->{$bond}->{active_slave}     = &get_sys_nic_data($bond,'bonding/active_slave');
      }
@@ -99,7 +98,7 @@ close($bm);
        }
       }
      }
-    if (($kver >= 3.15) && ($kver <= 5.0)) {
+    if (($kver >= 3.15)) {
       $line = &get_sys_nic_data($bond,'bonding/slaves');
       @slaves = split(/\s+/,$line);
       #printf "D[%i]: slaves = %s\n",$$,join(",",@slaves);
@@ -166,7 +165,7 @@ foreach $bond (sort keys %{$net}) {
       }
       printf "%s ",$ipv6->{addr};
     }
-  printf "\tslave nics:\n";
+  printf "\n  slave nics:\n";
   foreach $slave_net (sort keys %{$net->{$bond}->{nics}}) {
     printf "\t%s: mac %s, link %s, state %4s, speed %7s,\n\t\tdriver %s, version %s\n\t\tfirmware version %s\n",
       $slave_net,
