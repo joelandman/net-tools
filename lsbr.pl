@@ -36,22 +36,21 @@ foreach $bridge (@bridges) {
      @br=split(/\s+/,$bridge);
 
      if ($#br == 3) {
-					$brname = $br[0];
-					$net->{$brname}->{id} 	= $br[1];
-					$net->{$brname}->{stp} 	= $br[2];
-					push @{$net->{$brname}->{interfaces}},$br[3];
+         $brname = $br[0];
+         $net->{$brname}->{id}      = $br[1];
+         $net->{$brname}->{stp}     = $br[2];
+         push @{$net->{$brname}->{interfaces}},$br[3];
        }
       else
        {
-				 $brname = $br[0];
-					$net->{$brname}->{id} 	= $br[1];
-					$net->{$brname}->{stp} 	= $br[2];
-				 push @{$net->{$brname}->{interfaces}},"";
+         $brname = $br[0];
+         $net->{$brname}->{id}      = $br[1];
+         $net->{$brname}->{stp}     = $br[2];
+         push @{$net->{$brname}->{interfaces}},"";
        }
 }
 
 foreach $bridge (sort keys %{$net}) {
-
   @if = @{$net->{$bridge}->{interfaces}};
   printf "%s:\tinterfaces %s\n",
     $bridge,
