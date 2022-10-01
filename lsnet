@@ -183,7 +183,7 @@ my $pl = "";
 
 foreach $dev (sort keys %{$net}) {
   my $_st = ($net->{$dev}->{carrier} ? "up" : "dn" );
-  my $_sp = ($net->{$dev}->{speed} > 0 ? sprintf "%iG",$net->{$dev}->{speed}/1000 : ($net->{$dev}->{speed} == -1 ? "vnet" : ""));
+  my $_sp = ($net->{$dev}->{speed} > 0 ? sprintf "%iG",$net->{$dev}->{speed}/1000 : (($net->{$dev}->{speed} == -1) && ($_st ne "dn") ? "vnet" : ""));
   my $_ms = (defined($net->{$dev}->{flags}->{master}) ? $net->{$dev}->{flags}->{master} : "");
   my $_mt = (defined($net->{$dev}->{flags}->{mtu}) ? $net->{$dev}->{flags}->{mtu} : "" );
   my $_tx = $net->{$dev}->{tx};
