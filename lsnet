@@ -124,7 +124,7 @@ my $pl = "";
 # check for any bridge/bond masters.  If none, then omit the column
 my $bbm = false;
 foreach $dev (keys %{$net}) {
-	 my $_m = $net->{$dev}->{flags}->{master};
+  my $_m = $net->{$dev}->{flags}->{master};
   if ($_m ne "") {
     $bbm = true;
     last;
@@ -183,47 +183,46 @@ my $pl = "";
 
 foreach $dev (sort keys %{$net}) {
   my $_st = ($net->{$dev}->{carrier} ? "up" : "dn" );
-  my $_sp = ($net->{$dev}->{speed} > 0 ? sprintf "%iG",$net->{$dev}->{speed}/1000 : "");
+  my $_sp = ($net->{$dev}->{speed} > 0 ? sprintf "%iG",$net->{$dev}->{speed}/1000 : ($net->{$dev}->{speed} == -1 ? "vnet" : ""));
   my $_ms = (defined($net->{$dev}->{flags}->{master}) ? $net->{$dev}->{flags}->{master} : "");
   my $_mt = (defined($net->{$dev}->{flags}->{mtu}) ? $net->{$dev}->{flags}->{mtu} : "" );
   my $_tx = $net->{$dev}->{tx};
   my $_rx = $net->{$dev}->{rx};
   my $_txs = &autoscale(&size_to_bytes($_tx),{debug => false});
-	 my $_rxs = &autoscale(&size_to_bytes($_rx),{debug => false});
-																		
+  my $_rxs = &autoscale(&size_to_bytes($_rx),{debug => false});
 	
   if (defined($net->{$dev}->{ipv4})) {
      foreach my $_ip (@{$net->{$dev}->{ipv4}}) {
-			  printf $format,	$dev, $_ms, $_st, $_sp, $_ip->{addr}, $_mt, $_txs, $_rxs;
-		  }
-	}
-	if (defined($net->{$dev}->{ipv6})) {
+       if ($bbm) {
+         printf $format,	$dev, $_ms, $_st, $_sp, $_ip->{addr}, $_mt, $_txs, $_rxs;
+        }
+       else {
+         printf $format,        $dev, $_st, $_sp, $_ip->{addr}, $_mt, $_txs, $_rxs;
+       }
+     }
+  }
+  if (defined($net->{$dev}->{ipv6})) {
     foreach my $_ip (@{$net->{$dev}->{ipv6}}) {
-
-      printf $format,
-								$dev,
-								$_ms,
-								$_st,
-								$_sp,
-								$_ip->{addr},
-								$_mt,
-								$_txs,
-								$_rxs;
-  		}
-	}
+      if ($bbm) {
+        printf $format, $dev, $_ms, $_st, $_sp, $_ip->{addr}, $_mt, $_txs, $_rxs;
+       }
+      else {
+	printf $format, $dev, $_st, $_sp, $_ip->{addr}, $_mt, $_txs, $_rxs;
+      }
+    }
+  }
 	
-	if ((!defined($net->{$dev}->{ipv6})) && (!defined($net->{$dev}->{ipv4})) ) {
-		
-	printf $format,
-								$dev,
-								$_ms,
-								$_st,
-								$_sp,
-								"",
-								$_mt,
-								$_txs,
-								$_rxs;
-	}
+  if ((!defined($net->{$dev}->{ipv6})) && (!defined($net->{$dev}->{ipv4})) ) {
+      printf $format,
+		$dev,
+		$_ms,
+		$_st,
+		$_sp,
+		"",
+		$_mt,
+		$_txs,
+		$_rxs;
+  }
 }
 
 sub get_sys_nic_data {
