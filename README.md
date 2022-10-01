@@ -1,8 +1,8 @@
 # net-tools
 
-lsnet.pl:  Lists current network configuration in an easy to view manner
+lsnet:  Lists current network configuration in an easy to view manner
 
-    joe@gandalf:~/dev$ lsnet.pl 
+    joe@gandalf:~/dev$ lsnet 
            DEV [MST]   ST   SP IP                             MTU          TX          RX
            br0 [   ]   up      192.168.5.52/24               1500    4.687 GB    1.946 GB
            br0 [   ]   up      10.10.0.52/16                 1500    4.687 GB    1.946 GB
@@ -16,11 +16,11 @@ lsnet.pl:  Lists current network configuration in an easy to view manner
       wlp110s0 [   ]   up      fe80::af90:5fbb:33e0:fd59/64  1500   19.413 MB  612.783 MB
 
 
-lsbr.pl:  Lists current network bridges (linux bridge driver based) in terms of what interfaces are bridged
+lsbr:  Lists current network bridges (linux bridge driver based) in terms of what interfaces are bridged
 
-    joe@gandalf:~/dev$ lsbr.pl 
+    joe@gandalf:~/dev$ lsbr 
     br0:	interfaces enp109s0f1
 
 
-lsbond.pl:  Lists current status of bonds (linux bonding driver, not teaming driver)
+lsbond:  Lists current status of bonds (linux bonding driver, not teaming driver)
 

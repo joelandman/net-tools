@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# copyright 2012-2021 Joe Landman
+# copyright 2012-2022 Joe Landman
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -120,27 +120,66 @@ $width_TX = $width_RX = 10;
 
 my $p = "%";
 my $pl = "";
-if (!$csv) {
-	   $format = sprintf "%s%is \[%s%is\] %s%is %s%is %s%is %s%is  %s%s%is  %s%s%is\n",
-				$p,$width_dev,
-				$p,$width_master,
-				$p,$width_state,
-				$p,$width_speed,
-				$p,$width_ipaddr,
-				$p,$width_mtu,
-				$p,$pl,$width_TX,
-				$p,$pl,$width_RX;
-   }
- else {
-    $format = "%s,%s,%s,%s,%s,%s,%s,%s\n";
+
+# check for any bridge/bond masters.  If none, then omit the column
+my $bbm = false;
+foreach $dev (keys %{$net}) {
+	 my $_m = $net->{$dev}->{flags}->{master};
+  if ($_m ne "") {
+    $bbm = true;
+    last;
+  }
 }
 
-if ($csv) {
-	printf "Device,Master,State,Speed,IP,MTU,TX,RX\n";	
+if ($bbm) {
+  if (!$csv) {
+      $format = sprintf "%s%is \[%s%is\] %s%is %s%is %s%is %s%is  %s%s%is  %s%s%is\n",
+          $p,$width_dev,
+          $p,$width_master,
+          $p,$width_state,
+          $p,$width_speed,
+          $p,$width_ipaddr,
+          $p,$width_mtu,
+          $p,$pl,$width_TX,
+          $p,$pl,$width_RX;
+        }
+  else  {
+      $format = "%s,%s,%s,%s,%s,%s,%s,%s\n";
+  }
+
+  if ($csv) {
+    printf "Device,Master,State,Speed,IP,MTU,TX,RX\n";	
+  }
+  else {
+    printf $format,"DEV","MST","ST","SP","IP","MTU","TX","RX";
+  }
 }
 else {
-	printf $format,"DEV","MST","ST","SP","IP","MTU","TX","RX";
+    if (!$csv) {
+      $format = sprintf "%s%is %s%is %s%is %s%is %s%is  %s%s%is  %s%s%is\n",
+          $p,$width_dev,
+          $p,$width_state,
+          $p,$width_speed,
+          $p,$width_ipaddr,
+          $p,$width_mtu,
+          $p,$pl,$width_TX,
+          $p,$pl,$width_RX;
+        }
+  else  {
+      $format = "%s,%s,%s,%s,%s,%s,%s\n";
+  }
+
+  if ($csv) {
+    printf "Device,State,Speed,IP,MTU,TX,RX\n";	
+  }
+  else {
+    printf $format,"DEV","ST","SP","IP","MTU","TX","RX";
+  }
 }
+
+my $p = "%";
+my $pl = "";
+
 
 foreach $dev (sort keys %{$net}) {
   my $_st = ($net->{$dev}->{carrier} ? "up" : "dn" );
