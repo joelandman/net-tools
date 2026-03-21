@@ -230,15 +230,27 @@ foreach $dev (sort keys %{$net}) {
   }
 	
   if ((!defined($net->{$dev}->{ipv6})) && (!defined($net->{$dev}->{ipv4})) ) {
-      printf $format,
-		$dev,
-		$_ms,
-		$_st,
-		$_sp,
-		"",
-		$_mt,
-		$_txs,
-		$_rxs;
+      if ($bbm) {
+          printf $format,
+              $dev,
+              $_ms,
+              $_st,
+              $_sp,
+              "",
+              $_mt,
+              $_txs,
+              $_rxs;
+      }
+      else {
+          printf $format,
+              $dev,
+              $_st,
+              $_sp,
+              "",
+              $_mt,
+              $_txs,
+              $_rxs;
+      }
   }
 }
 
