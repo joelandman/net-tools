@@ -22,7 +22,7 @@ my ($f,$dev,@devices,$cmd,$rc,@bonds,$bond,$slave_net,@slaves,$bond_nic);
 my ($path,$net,@ethtool,@ip,$ipv4,$ipv6,$line,$first,@proc);
 my ($bm,@dev,$kver,$kmajor,$kminor,$krel,@kv,$width_state,$width_ipaddr);
 my ($width_dev,$header,$format,$width_master,$width_mtu,$width_RX,$width_TX);
-my ($width_speed,@ifs);
+my ($width_speed,$width_flaps,$width_rdma,@ifs);
 
 exit if (!(-e '/sys/class/net/'));
 
@@ -43,8 +43,21 @@ $kver=$kmajor+$kminor/100;
 	$width_RX 	=
 	$width_TX 	= -1;
 $width_speed	= 4;
+$width_flaps = 5;
+$width_rdma  = 4;
 
 chomp(@devices    = `ls /sys/class/net/ `);
+
+# build RDMA netdev map (netdev -> rdma link name)
+my %rdma_map;
+chomp(my @rdma_links = `rdma link show 2>/dev/null`);
+foreach my $line (@rdma_links) {
+    # example: link mlx5_0/1 state ACTIVE physical_state LINK_UP netdev eth0
+    if ($line =~ /^link\s+(\S+)\s+.*\s+netdev\s+(\S+)/) {
+        my ($rname,$ndev) = ($1,$2);
+        $rdma_map{$ndev} = $rname;
+    }
+}
 foreach $dev (sort @devices) {
 	 next if ((@ifs) && (grep {!/$dev/} @ifs ));
    my $_s = ($net->{$dev}->{carrier} ? "up" : "dn" );
@@ -68,6 +81,10 @@ foreach $dev (sort @devices) {
 	       &get_sys_nic_data($dev,'statistics/rx_bytes');
    $net->{$dev}->{tx} =
 	       &get_sys_nic_data($dev,'statistics/tx_bytes');
+   $net->{$dev}->{flaps} =
+               &get_sys_nic_data($dev,'carrier_changes');
+   $net->{$dev}->{flaps} = 0 if (!defined($net->{$dev}->{flaps}) || $net->{$dev}->{flaps} eq "");
+   $width_flaps = ( length($net->{$dev}->{flaps}) > $width_flaps ? length($net->{$dev}->{flaps}) : $width_flaps );
 
    chomp(@ip = split(/\n/,`ip addr show dev $dev`));
 
@@ -108,6 +125,11 @@ foreach $dev (sort @devices) {
 	$net->{$dev}->{real_mac}=$v
       }
     }
+
+    # rdma netdev name (if present)
+    $net->{$dev}->{rdma} = $rdma_map{$dev} if (defined $rdma_map{$dev});
+    $net->{$dev}->{rdma} = "" if (!defined($net->{$dev}->{rdma}));
+    $width_rdma = ( length($net->{$dev}->{rdma}) > $width_rdma ? length($net->{$dev}->{rdma}) : $width_rdma );
 }
 
 foreach $dev (sort keys %{$net}) {
@@ -133,47 +155,51 @@ foreach $dev (keys %{$net}) {
 
 if ($bbm) {
   if (!$csv) {
-      $format = sprintf "%s%is \[%s%is\] %s%is %s%is %s%is %s%is  %s%s%is  %s%s%is\n",
+      $format = sprintf "%s%is \[%s%is\] %s%is %s%is %s%is %s%is %s%is %s%is  %s%s%is  %s%s%is\n",
           $p,$width_dev,
           $p,$width_master,
           $p,$width_state,
           $p,$width_speed,
           $p,$width_ipaddr,
           $p,$width_mtu,
+          $p,$width_flaps,
+          $p,$width_rdma,
           $p,$pl,$width_TX,
           $p,$pl,$width_RX;
         }
   else  {
-      $format = "%s,%s,%s,%s,%s,%s,%s,%s\n";
+      $format = "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n";
   }
 
   if ($csv) {
-    printf "Device,Master,State,Speed,IP,MTU,TX,RX\n";	
+    printf "Device,Master,State,Speed,IP,MTU,Flaps,RDMA,TX,RX\n";	
   }
   else {
-    printf $format,"DEV","MST","ST","SP","IP","MTU","TX","RX";
+    printf $format,"DEV","MST","ST","SP","IP","MTU","FLP","RDMA","TX","RX";
   }
 }
 else {
     if (!$csv) {
-      $format = sprintf "%s%is %s%is %s%is %s%is %s%is  %s%s%is  %s%s%is\n",
+      $format = sprintf "%s%is %s%is %s%is %s%is %s%is %s%is %s%is  %s%s%is  %s%s%is\n",
           $p,$width_dev,
           $p,$width_state,
           $p,$width_speed,
           $p,$width_ipaddr,
           $p,$width_mtu,
+          $p,$width_flaps,
+          $p,$width_rdma,
           $p,$pl,$width_TX,
           $p,$pl,$width_RX;
         }
   else  {
-      $format = "%s,%s,%s,%s,%s,%s,%s\n";
+      $format = "%s,%s,%s,%s,%s,%s,%s,%s,%s\n";
   }
 
   if ($csv) {
-    printf "Device,State,Speed,IP,MTU,TX,RX\n";	
+    printf "Device,State,Speed,IP,MTU,Flaps,RDMA,TX,RX\n";	
   }
   else {
-    printf $format,"DEV","ST","SP","IP","MTU","TX","RX";
+    printf $format,"DEV","ST","SP","IP","MTU","FLP","RDMA","TX","RX";
   }
 }
 
@@ -205,26 +231,28 @@ foreach $dev (sort keys %{$net}) {
   my $_mt = (defined($net->{$dev}->{flags}->{mtu}) ? $net->{$dev}->{flags}->{mtu} : "" );
   my $_tx = $net->{$dev}->{tx};
   my $_rx = $net->{$dev}->{rx};
+  my $_fl = $net->{$dev}->{flaps};
+  my $_rd = $net->{$dev}->{rdma};
   my $_txs = &autoscale(&size_to_bytes($_tx),{debug => false});
   my $_rxs = &autoscale(&size_to_bytes($_rx),{debug => false});
 	
   if (defined($net->{$dev}->{ipv4})) {
      foreach my $_ip (@{$net->{$dev}->{ipv4}}) {
        if ($bbm) {
-         printf $format,	$dev, $_ms, $_st, $_sp, $_ip->{addr}, $_mt, $_txs, $_rxs;
+         printf $format,	$dev, $_ms, $_st, $_sp, $_ip->{addr}, $_mt, $_fl, $_rd, $_txs, $_rxs;
         }
        else {
-         printf $format,        $dev, $_st, $_sp, $_ip->{addr}, $_mt, $_txs, $_rxs;
+          printf $format,        $dev, $_st, $_sp, $_ip->{addr}, $_mt, $_fl, $_rd, $_txs, $_rxs;
        }
      }
   }
   if (defined($net->{$dev}->{ipv6})) {
     foreach my $_ip (@{$net->{$dev}->{ipv6}}) {
       if ($bbm) {
-        printf $format, $dev, $_ms, $_st, $_sp, $_ip->{addr}, $_mt, $_txs, $_rxs;
+        printf $format, $dev, $_ms, $_st, $_sp, $_ip->{addr}, $_mt, $_fl, $_rd, $_txs, $_rxs;
        }
       else {
-	printf $format, $dev, $_st, $_sp, $_ip->{addr}, $_mt, $_txs, $_rxs;
+	printf $format, $dev, $_st, $_sp, $_ip->{addr}, $_mt, $_fl, $_rd, $_txs, $_rxs;
       }
     }
   }
@@ -238,6 +266,8 @@ foreach $dev (sort keys %{$net}) {
               $_sp,
               "",
               $_mt,
+              $_fl,
+              $_rd,
               $_txs,
               $_rxs;
       }
@@ -248,6 +278,8 @@ foreach $dev (sort keys %{$net}) {
               $_sp,
               "",
               $_mt,
+              $_fl,
+              $_rd,
               $_txs,
               $_rxs;
       }
